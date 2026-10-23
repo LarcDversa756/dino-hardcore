@@ -13,3 +13,5 @@ A browser game built with plain HTML, CSS, and JavaScript. Open `index.html` to 
 
 The workflow in `.github/workflows/pages.yml` deploys `index.html` to GitHub Pages when code is pushed to `main` or `master`.
 In the repository's **Settings → Pages**, select **GitHub Actions** as the build and deployment source. After the workflow succeeds, share the Pages URL shown in the repository's **Deployments** or **Settings → Pages**.
+
+For this repository, the expected site address is <https://larcdversa756.github.io/dino-hardcore/>.
