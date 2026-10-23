@@ -1,0 +1,1907 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f1">
+  <title>Dino Run</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      background: #f6f7f1;
+      color: #26352d;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(ellipse at 50% 100%, #e4ead8 0, transparent 55%),
+        #f6f7f1;
+    }
+
+    .game {
+      width: min(900px, 100%);
+      overflow: hidden;
+      border: 1px solid #dce3d7;
+      border-radius: 22px;
+      background: #fffef9;
+      box-shadow: 0 22px 60px #283b2b18;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 22px 28px 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border-radius: 14px;
+      background: #e8f1df;
+      font-size: 23px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(20px, 4vw, 27px);
+      letter-spacing: -1px;
+    }
+
+    .subtitle {
+      margin: 3px 0 0;
+      color: #829086;
+      font-size: 13px;
+    }
+
+    .score-box {
+      min-width: 100px;
+      padding: 8px 14px;
+      border: 1px solid #e9ede5;
+      border-radius: 12px;
+      text-align: right;
+    }
+
+    .score-label {
+      display: block;
+      color: #96a197;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+    }
+
+    .score-label[hidden] { display: none; }
+
+    #score {
+      font-variant-numeric: tabular-nums;
+      font-size: 21px;
+      font-weight: 800;
+    }
+
+    .arena {
+      position: relative;
+      margin: 0 18px;
+      overflow: hidden;
+      border: 1px solid #e9eee4;
+      border-radius: 16px;
+      background: #eef5e9;
+      touch-action: manipulation;
+      cursor: pointer;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .message {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      padding: 20px;
+      text-align: center;
+      background: #f4f8efb8;
+      transition: opacity 160ms ease;
+    }
+
+    .message.hidden {
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .dev-code-panel {
+      position: absolute;
+      z-index: 2;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: #18241dcc;
+    }
+
+    .dev-code-panel[hidden] { display: none; }
+
+    .dev-code-form {
+      display: grid;
+      width: min(320px, 100%);
+      gap: 12px;
+      padding: 22px;
+      border-radius: 16px;
+      background: #fffef9;
+      box-shadow: 0 14px 36px #10191055;
+    }
+
+    .dev-code-form h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .dev-code-form p {
+      margin: 0;
+      color: #6c7b70;
+      font-size: 13px;
+    }
+
+    .dev-code-form input {
+      min-height: 42px;
+      padding: 0 11px;
+      border: 1px solid #cbd6c8;
+      border-radius: 9px;
+      font: inherit;
+    }
+
+    .dev-code-form input:focus-visible {
+      outline: 3px solid #a9c88d;
+      outline-offset: 2px;
+    }
+
+    .dev-code-error {
+      min-height: 17px;
+      color: #a33e32 !important;
+      font-weight: 700;
+    }
+
+    .dev-code-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .dev-code-cancel {
+      background: #758278;
+      box-shadow: 0 5px 0 #56625a;
+    }
+
+    .message h2 {
+      margin: 0 0 6px;
+      font-size: clamp(22px, 4vw, 31px);
+      letter-spacing: -1px;
+    }
+
+    .message p {
+      margin: 0 0 16px;
+      color: #6c7b70;
+      font-size: 14px;
+    }
+
+    button {
+      min-height: 44px;
+      padding: 0 20px;
+      border: 0;
+      border-radius: 12px;
+      background: #365b3d;
+      color: white;
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #26442d;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+    }
+
+    button:hover { background: #2e5135; }
+    button:active { transform: translateY(3px); box-shadow: 0 2px 0 #26442d; }
+    button:focus-visible { outline: 3px solid #a9c88d; outline-offset: 4px; }
+
+    .help {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px 24px;
+      padding: 17px 20px 20px;
+      color: #78877b;
+      font-size: 12px;
+    }
+
+    .key {
+      display: inline-block;
+      margin-right: 4px;
+      padding: 3px 7px;
+      border: 1px solid #dfe6dc;
+      border-radius: 6px;
+      background: #fff;
+      color: #45574a;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .dev-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 9px;
+      border: 1px solid #dfe6dc;
+      border-radius: 9px;
+      background: #fff;
+      color: #45574a;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .dev-toggle input {
+      accent-color: #365b3d;
+    }
+
+    @media (max-width: 520px) {
+      body { padding: 12px; }
+      .game { border-radius: 17px; }
+      .topbar { padding: 17px 16px 13px; }
+      .arena { margin: 0 10px; }
+      .help { gap: 8px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">🦖</div>
+        <div>
+          <h1>Dino Run</h1>
+          <p class="subtitle">Lari sejauh mungkin!</p>
+        </div>
+      </div>
+      <div class="score-box" aria-live="polite">
+        <span class="score-label">SKOR</span>
+        <span id="score">00000</span>
+        <span class="score-label" id="stage-status">STAGE 1</span>
+        <span class="score-label" id="skill-status">TANPA SKILL</span>
+        <span class="score-label" id="dev-indicator" hidden>IMMORTAL</span>
+      </div>
+    </header>
+
+    <section class="arena" id="arena" aria-label="Area permainan Dino Run">
+      <canvas id="game" width="860" height="300" aria-label="Game dinosaurus. Tekan spasi atau panah atas hingga dua kali untuk melompat."></canvas>
+      <div class="message" id="message">
+        <h2 id="message-title">Siap berlari?</h2>
+        <p id="message-text">Lompati rintangan, ambil bola skill, dan hadapi para beruang.</p>
+        <button id="play-button" type="button">Mulai bermain</button>
+      </div>
+      <div class="dev-code-panel" id="dev-code-panel" role="dialog" aria-modal="true" aria-labelledby="dev-code-title" hidden>
+        <form class="dev-code-form" id="dev-code-form" aria-labelledby="dev-code-title">
+          <h2 id="dev-code-title">Mode Developer</h2>
+          <p>Masukkan kode untuk mengaktifkan mode kebal.</p>
+          <input id="dev-code" type="password" autocomplete="off" aria-label="Kode developer" required>
+          <p class="dev-code-error" id="dev-code-error" role="alert"></p>
+          <div class="dev-code-actions">
+            <button class="dev-code-cancel" id="dev-code-cancel" type="button">Batal</button>
+            <button type="submit">Aktifkan</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <footer class="help">
+      <span><kbd class="key">SPASI</kbd> atau <kbd class="key">↑</kbd> untuk melompat (bisa 2x)</span>
+      <span><kbd class="key">↓</kbd> untuk menunduk</span>
+      <span>Ambil bola skill: S perisai · ❄ lambat · + bonus skor</span>
+      <span>Stage 2: hindari kejaran Gustav</span>
+      <span>Stage 3: hindari burung dan tiga serangan Garuda</span>
+      <span>Stage 4: lompat lubang, tunduk dari marlin, double jump saat air bergelombang</span>
+      <span>Stage 5: kumpulkan api, tahan F untuk menangkis Titanoboa</span>
+      <span>Stage 6: hindari mumi dan ekor kalajengking: lompat rendah, tunduk tinggi</span>
+      <span>Ketuk layar untuk melompat</span>
+      <label class="dev-toggle"><input id="dev-mode" type="checkbox"> Mode Developer (kebal)</label>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      const canvas = document.querySelector("#game");
+      const ctx = canvas.getContext("2d");
+      const scoreElement = document.querySelector("#score");
+      const message = document.querySelector("#message");
+      const messageTitle = document.querySelector("#message-title");
+      const messageText = document.querySelector("#message-text");
+      const playButton = document.querySelector("#play-button");
+      const arena = document.querySelector("#arena");
+      const stageStatus = document.querySelector("#stage-status");
+      const skillStatus = document.querySelector("#skill-status");
+      const devModeToggle = document.querySelector("#dev-mode");
+      const devCodePanel = document.querySelector("#dev-code-panel");
+      const devCodeForm = document.querySelector("#dev-code-form");
+      const devCodeInput = document.querySelector("#dev-code");
+      const devCodeError = document.querySelector("#dev-code-error");
+      const devCodeCancel = document.querySelector("#dev-code-cancel");
+
+      const groundY = 246;
+      const dino = { x: 90, y: groundY - 48, width: 42, height: 48, velocityY: 0, ducking: false };
+      let obstacles = [];
+      let skillBalls = [];
+      let clouds = [{ x: 140, y: 67 }, { x: 470, y: 105 }, { x: 740, y: 54 }];
+      let particles = [];
+      let running = false;
+      let score = 0;
+      let speed = 6;
+      let spawnTimer = 85;
+      let skillSpawnTimer = 250;
+      let slowTimer = 0;
+      let bonusFlashTimer = 0;
+      let shieldCharges = 0;
+      let jumpsRemaining = 2;
+      let bossActive = false;
+      let bossSpawnIndex = 0;
+      let bossSpawnTimer = 0;
+      let bossPassedCount = 0;
+      let bossCleared = false;
+      let stage = 1;
+      let crocodileSpawnTimer = 0;
+      let gustavStartTimer = 0;
+      let gustavProgress = 0;
+      let gustavActive = false;
+      let stage2Cleared = false;
+      let garudaSpawned = false;
+      let garudaActive = false;
+      let garudaCount = 0;
+      let nextGarudaScore = 5300;
+      let bridgeHoleTimer = 0;
+      let megalodonActive = false;
+      let marlinSpawnTimer = 0;
+      let megalodonAttackTimer = 0;
+      let megalodonAttackCount = 0;
+      let jaguarSpawnTimer = 0;
+      let titanoboaActive = false;
+      let titanoboaHits = 0;
+      let titanoboaAttackTimer = 0;
+      let titanoboaWarningTimer = 0;
+      let titanoboaAttackActive = false;
+      let fireCharges = 0;
+      let fireGuarding = false;
+      let dungeonSpawnTimer = 0;
+      let scorpionAttackTimer = 0;
+      let scorpionWarningTimer = 0;
+      let scorpionPattern = "low";
+      let scorpionAttackActive = false;
+      let titanoboaDefeated = false;
+      let stage6StartScore = 0;
+      let devMode = false;
+      let fireKeyHeld = false;
+      let frame = 0;
+      let previousTime = 0;
+      let animationFrame = 0;
+      let highScore = 0;
+
+      try {
+        highScore = Number(localStorage.getItem("dino-run-high-score")) || 0;
+      } catch (error) {
+        highScore = 0;
+      }
+
+      const formatScore = value => String(Math.floor(value)).padStart(5, "0");
+      const bossNames = ["Mother Bear", "Polar Bear", "Black Bear", "Grizzly Bear"];
+      const bearStyles = {
+        "Mother Bear": { fur: "#a76c45", muzzle: "#f0c7a0", label: "#754322" },
+        "Polar Bear": { fur: "#f5f3e9", muzzle: "#d9d4c7", label: "#697b82" },
+        "Black Bear": { fur: "#303b3b", muzzle: "#9b8271", label: "#263333" },
+        "Grizzly Bear": { fur: "#80553b", muzzle: "#d5a47b", label: "#573720" }
+      };
+
+      function updateSkillStatus() {
+        const activeSkills = [];
+        if (shieldCharges > 0) activeSkills.push(`PERISAI x${shieldCharges}`);
+        if (slowTimer > 0) activeSkills.push("WAKTU LAMBAT");
+        if (bonusFlashTimer > 0) activeSkills.push("+75 SKOR");
+        if (fireCharges > 0) activeSkills.push(`API x${fireCharges}${fireGuarding ? " · SIAP" : ""}`);
+        skillStatus.textContent = activeSkills.join(" · ") || "TANPA SKILL";
+      }
+
+      function drawBackground() {
+        const swamp = stage === 2;
+        const mountain = stage === 3;
+        const ocean = stage === 4;
+        const island = stage === 5;
+        const dungeon = stage === 6;
+        const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        sky.addColorStop(0, dungeon ? "#202c3d" : island ? "#8bc4c3" : ocean ? "#8dc9dc" : mountain ? "#b9d8e8" : swamp ? "#b7d2bd" : "#edf5e9");
+        sky.addColorStop(1, dungeon ? "#514755" : island ? "#e2d89e" : ocean ? "#c7e7df" : mountain ? "#edf1e8" : swamp ? "#d4dfbb" : "#f8f8ee");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        if (ocean || island) {
+          ctx.fillStyle = "#3989a0";
+          ctx.fillRect(0, island ? 180 : 170, canvas.width, canvas.height - (island ? 180 : 170));
+          ctx.fillStyle = "#6bb6b6";
+          for (let i = 0; i < 22; i++) {
+            const x = ((i * 79 - frame * speed * 0.55) % (canvas.width + 40) + canvas.width + 40) % (canvas.width + 40);
+            const y = 180 + (i % 9) * 13;
+            ctx.fillRect(x, y, 18 + i % 3 * 8, 2);
+          }
+          if (megalodonActive && score < 10000) drawMegalodon();
+        }
+
+        if (dungeon) {
+          ctx.fillStyle = "#292d3a";
+          ctx.fillRect(0, 0, canvas.width, groundY);
+          for (let i = 0; i < 7; i++) {
+            const x = i * 145 - (frame * speed * 0.12) % 90;
+            ctx.fillStyle = "#42404b";
+            ctx.fillRect(x, 30, 20, 155);
+            ctx.fillStyle = "#8c6a49";
+            ctx.fillRect(x + 7, 66, 6, 11);
+            ctx.fillStyle = "#ffbd65";
+            ctx.beginPath();
+            ctx.arc(x + 10, 66, 6 + Math.sin(frame / 5 + i) * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#42404b";
+            ctx.fillRect(x + 8, 71, 4, 10);
+          }
+          ctx.fillStyle = "#56505a";
+          ctx.fillRect(0, groundY - 10, canvas.width, 16);
+          ctx.fillStyle = "#72636a";
+          for (let x = -50; x < canvas.width + 50; x += 55) {
+            ctx.fillRect(x - (frame * speed * 0.6) % 55, groundY - 7, 48, 3);
+          }
+          const darkness = ctx.createRadialGradient(450, 145, 20, 450, 145, 520);
+          darkness.addColorStop(0, "#11172600");
+          darkness.addColorStop(1, "#111726b8");
+          ctx.fillStyle = darkness;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (!ocean && !island) {
+          ctx.fillStyle = mountain ? "#91a9a4" : swamp ? "#78987a" : "#dcead5";
+          ctx.beginPath();
+          if (mountain) {
+            ctx.moveTo(0, 203);
+            ctx.lineTo(120, 77);
+            ctx.lineTo(218, 182);
+            ctx.lineTo(344, 54);
+            ctx.lineTo(491, 191);
+            ctx.lineTo(620, 91);
+            ctx.lineTo(766, 181);
+            ctx.lineTo(860, 104);
+            ctx.lineTo(860, groundY);
+            ctx.lineTo(0, groundY);
+          } else {
+            ctx.moveTo(0, swamp ? 194 : 205);
+            ctx.quadraticCurveTo(130, swamp ? 150 : 148, 270, swamp ? 197 : 204);
+            ctx.quadraticCurveTo(420, swamp ? 159 : 157, 565, swamp ? 193 : 205);
+            ctx.quadraticCurveTo(715, swamp ? 143 : 145, 860, swamp ? 196 : 200);
+            ctx.lineTo(860, groundY);
+            ctx.lineTo(0, groundY);
+          }
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        if (mountain) {
+          ctx.fillStyle = "#eaf2ec";
+          [[120, 77, 218, 182, 147, 111], [344, 54, 491, 191, 392, 116], [620, 91, 766, 181, 670, 126], [860, 104, 860, 167, 814, 137]].forEach(([tipX, tipY, rightX, rightY, snowX, snowY]) => {
+            ctx.beginPath();
+            ctx.moveTo(tipX, tipY);
+            ctx.lineTo(snowX, snowY);
+            ctx.lineTo(rightX, rightY);
+            ctx.closePath();
+            ctx.fill();
+          });
+          ctx.fillStyle = "#456b52";
+          for (let i = 0; i < 10; i++) {
+            const x = ((i * 103 - frame * speed * 0.18) % (canvas.width + 35) + canvas.width + 35) % (canvas.width + 35);
+            const y = 182 + i % 3 * 8;
+            ctx.beginPath();
+            ctx.moveTo(x, y + 18);
+            ctx.lineTo(x + 11, y - 7);
+            ctx.lineTo(x + 22, y + 18);
+            ctx.closePath();
+            ctx.fill();
+          }
+        }
+
+        if (dungeon) {
+          ctx.fillStyle = "#302d39";
+          ctx.fillRect(0, groundY - 10, canvas.width, 16);
+        } else if (island) {
+          ctx.fillStyle = "#547b4a";
+          ctx.fillRect(0, groundY - 48, canvas.width, 42);
+          ctx.fillStyle = "#d6bd79";
+          ctx.fillRect(0, groundY - 8, canvas.width, 13);
+          for (let i = 0; i < 6; i++) {
+            const x = ((i * 171 - frame * speed * 0.16) % (canvas.width + 100) + canvas.width + 100) % (canvas.width + 100) - 50;
+            ctx.fillStyle = "#76583c";
+            ctx.fillRect(x + 26, 87, 9, 103);
+            ctx.fillStyle = "#326d4e";
+            ctx.beginPath();
+            ctx.ellipse(x + 14, 89, 29, 9, -0.5, 0, Math.PI * 2);
+            ctx.ellipse(x + 44, 79, 31, 9, 0.4, 0, Math.PI * 2);
+            ctx.ellipse(x + 25, 67, 30, 9, -0.9, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          for (let i = 0; i < 7; i++) drawJaguarBush(-30 + ((i * 145 - frame * speed * 0.4) % (canvas.width + 90) + canvas.width + 90) % (canvas.width + 90), groundY - 14, false);
+        } else if (ocean) {
+          const offset = (frame * speed * 1.2) % 58;
+          ctx.fillStyle = "#795a3d";
+          ctx.fillRect(0, groundY - 10, canvas.width, 13);
+          ctx.fillStyle = "#b78352";
+          for (let x = -58; x < canvas.width + 58; x += 58) {
+            ctx.fillRect(x - offset, groundY - 9, 54, 9);
+            ctx.fillStyle = "#d6a76d";
+            ctx.fillRect(x - offset, groundY - 9, 2, 9);
+            ctx.fillStyle = "#b78352";
+          }
+          ctx.fillStyle = "#624b38";
+          ctx.fillRect(0, groundY + 3, canvas.width, 5);
+          for (let x = -90; x < canvas.width + 90; x += 180) {
+            const postX = ((x - frame * speed * 1.2) % (canvas.width + 180) + canvas.width + 180) % (canvas.width + 180) - 90;
+            ctx.fillRect(postX, groundY - 35, 5, 26);
+            ctx.fillRect(postX + 42, groundY - 35, 5, 26);
+            ctx.fillRect(postX, groundY - 35, 47, 4);
+          }
+        } else if (swamp) {
+          for (let i = 0; i < 7; i++) {
+            const x = ((i * 157 - frame * speed * 0.12) % (canvas.width + 100) + canvas.width + 100) % (canvas.width + 100) - 50;
+            ctx.fillStyle = "#58745d";
+            ctx.fillRect(x + 17, 119, 8, 76);
+            ctx.beginPath();
+            ctx.ellipse(x + 21, 112, 28, 22, 0, 0, Math.PI * 2);
+            ctx.ellipse(x + 4, 127, 18, 14, 0, 0, Math.PI * 2);
+            ctx.ellipse(x + 39, 127, 18, 14, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = "#a8c17e";
+            ctx.beginPath();
+            ctx.arc(x + 19, 183, 5, 0, Math.PI * 2);
+            ctx.arc(x + 36, 174, 4, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.fillStyle = "#527968";
+          ctx.fillRect(0, groundY + 3, canvas.width, canvas.height - groundY);
+          ctx.fillStyle = "#8bb49a";
+          for (let i = 0; i < 20; i++) {
+            const x = ((i * 97 - frame * speed * 0.65) % (canvas.width + 25) + canvas.width + 25) % (canvas.width + 25);
+            ctx.beginPath();
+            ctx.ellipse(x, groundY + 17 + i % 3 * 7, 6 + i % 4 * 2, 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        } else if (!mountain && !dungeon) {
+          clouds.forEach(cloud => {
+            ctx.fillStyle = "#fffefb";
+            ctx.beginPath();
+            ctx.arc(cloud.x, cloud.y, 12, 0, Math.PI * 2);
+            ctx.arc(cloud.x + 15, cloud.y - 6, 16, 0, Math.PI * 2);
+            ctx.arc(cloud.x + 33, cloud.y, 11, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
+
+        if ((!ocean && !dungeon) || island) {
+          ctx.strokeStyle = island ? "#74814e" : mountain ? "#586c54" : swamp ? "#405e4b" : "#829a77";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(0, groundY);
+          ctx.lineTo(canvas.width, groundY);
+          ctx.stroke();
+
+          ctx.fillStyle = island ? "#c8aa68" : mountain ? "#8a9f78" : swamp ? "#a9c29a" : "#a7b99b";
+          for (let i = 0; i < 24; i++) {
+            const x = ((i * 83 - frame * speed * 0.8) % (canvas.width + 30) + canvas.width + 30) % (canvas.width + 30);
+            ctx.fillRect(x, groundY + 13 + (i % 3) * 7, 9 + (i % 4) * 3, 2);
+          }
+        }
+      }
+
+      function drawDino() {
+        const crouch = dino.ducking && dino.y >= groundY - dino.height - 1;
+        const bodyY = crouch ? dino.y + 14 : dino.y;
+        const bodyH = crouch ? 32 : 38;
+        ctx.save();
+        ctx.translate(dino.x, bodyY);
+        ctx.fillStyle = "#365b3d";
+
+        if (crouch) {
+          ctx.fillRect(8, 6, 34, 21);
+          ctx.fillRect(30, 0, 22, 16);
+          ctx.fillRect(49, 5, 9, 6);
+          ctx.fillRect(0, 13, 13, 8);
+        } else {
+          ctx.fillRect(8, 10, 26, 30);
+          ctx.fillRect(17, 0, 27, 22);
+          ctx.fillRect(37, 6, 13, 7);
+          ctx.fillRect(0, 17, 12, 7);
+          ctx.fillRect(26, 27, 8, 7);
+        }
+
+        ctx.fillStyle = "#fffef9";
+        ctx.fillRect(crouch ? 43 : 36, crouch ? 4 : 5, 5, 5);
+        ctx.fillStyle = "#27372b";
+        ctx.fillRect(crouch ? 45 : 38, crouch ? 5 : 6, 2, 2);
+
+        if (!crouch) {
+          const step = running && dino.y >= groundY - dino.height - 1 ? Math.floor(frame / 6) % 2 : 0;
+          ctx.fillStyle = "#365b3d";
+          ctx.fillRect(12, 35, 7, step ? 9 : 13);
+          ctx.fillRect(25, 35, 7, step ? 13 : 9);
+          ctx.fillRect(9, step ? 42 : 46, 12, 3);
+          ctx.fillRect(23, step ? 46 : 42, 12, 3);
+        } else {
+          ctx.fillRect(15, 26, 7, 5);
+          ctx.fillRect(32, 26, 7, 5);
+        }
+        ctx.restore();
+      }
+
+      function drawCactus(obstacle) {
+        const { x, y, width, height, type } = obstacle;
+        ctx.fillStyle = type === 2 ? "#6f9b61" : "#527e4c";
+        ctx.fillRect(x + width * 0.35, y, width * 0.3, height);
+        ctx.fillRect(x, y + height * 0.4, width * 0.38, 7);
+        ctx.fillRect(x, y + height * 0.23, 7, height * 0.2);
+        ctx.fillRect(x + width * 0.62, y + height * 0.56, width * 0.38, 7);
+        ctx.fillRect(x + width * 0.62, y + height * 0.34, 7, height * 0.24);
+        ctx.fillStyle = "#8eb27b";
+        ctx.fillRect(x + width * 0.43, y + 4, 3, height - 8);
+      }
+
+      function drawBear(obstacle) {
+        const { x, y, width, height } = obstacle;
+        const style = bearStyles[obstacle.name] || bearStyles["Grizzly Bear"];
+        const bounce = Math.sin(frame / 5) * 2;
+        ctx.save();
+        ctx.translate(x, y + bounce);
+        ctx.fillStyle = style.fur;
+        ctx.beginPath();
+        ctx.ellipse(width / 2, height * 0.63, width * 0.4, height * 0.34, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(width * 0.68, height * 0.3, height * 0.24, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(width * 0.52, height * 0.12, height * 0.1, 0, Math.PI * 2);
+        ctx.arc(width * 0.82, height * 0.12, height * 0.1, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = style.muzzle;
+        ctx.beginPath();
+        ctx.ellipse(width * 0.79, height * 0.38, width * 0.13, height * 0.09, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#26332b";
+        ctx.beginPath();
+        ctx.arc(width * 0.73, height * 0.26, 2, 0, Math.PI * 2);
+        ctx.arc(width * 0.89, height * 0.37, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = style.fur;
+        ctx.fillRect(width * 0.23, height * 0.78, 8, 8);
+        ctx.fillRect(width * 0.62, height * 0.78, 8, 8);
+        ctx.restore();
+
+        if (obstacle.bossMember) {
+          ctx.fillStyle = style.label;
+          ctx.font = "bold 11px Trebuchet MS, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(obstacle.displayName || obstacle.name, x + width / 2, y - 8);
+        }
+      }
+
+      function drawCrocodile(obstacle) {
+        const { x, y, width, height } = obstacle;
+        ctx.save();
+        ctx.fillStyle = "#526f42";
+        ctx.beginPath();
+        ctx.ellipse(x + width * 0.48, y + height * 0.64, width * 0.36, height * 0.3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(x + width * 0.79, y + height * 0.43, width * 0.25, height * 0.18, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#394f35";
+        ctx.beginPath();
+        ctx.moveTo(x + width * 0.38, y + height * 0.4);
+        ctx.lineTo(x + width * 0.53, y + height * 0.04);
+        ctx.lineTo(x + width * 0.64, y + height * 0.42);
+        ctx.lineTo(x + width * 0.74, y + height * 0.02);
+        ctx.lineTo(x + width * 0.83, y + height * 0.4);
+        ctx.fill();
+        ctx.fillStyle = "#f4f0cd";
+        ctx.fillRect(x + width * 0.77, y + height * 0.49, width * 0.19, 3);
+        for (let i = 0; i < 4; i++) {
+          ctx.beginPath();
+          ctx.moveTo(x + width * (0.78 + i * 0.045), y + height * 0.49);
+          ctx.lineTo(x + width * (0.8 + i * 0.045), y + height * 0.59);
+          ctx.lineTo(x + width * (0.82 + i * 0.045), y + height * 0.49);
+          ctx.fill();
+        }
+        ctx.fillStyle = "#e8c75c";
+        ctx.beginPath();
+        ctx.arc(x + width * 0.75, y + height * 0.35, 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#29372a";
+        ctx.beginPath();
+        ctx.arc(x + width * 0.76, y + height * 0.35, 1.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawMarlin(obstacle) {
+        const { x, y, width, height } = obstacle;
+        ctx.save();
+        ctx.fillStyle = "#396f91";
+        ctx.beginPath();
+        ctx.ellipse(x + width * 0.55, y + height * 0.58, width * 0.33, height * 0.22, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(x + width * 0.27, y + height * 0.58);
+        ctx.lineTo(x + width * 0.02, y + height * 0.16);
+        ctx.lineTo(x + width * 0.37, y + height * 0.48);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(x + width * 0.46, y + height * 0.43);
+        ctx.lineTo(x + width * 0.34, y + height * 0.03);
+        ctx.lineTo(x + width * 0.63, y + height * 0.43);
+        ctx.fill();
+        ctx.fillStyle = "#537d96";
+        ctx.beginPath();
+        ctx.moveTo(x + width * 0.78, y + height * 0.56);
+        ctx.lineTo(x + width, y + height * 0.18);
+        ctx.lineTo(x + width * 0.91, y + height * 0.6);
+        ctx.lineTo(x + width, y + height * 0.96);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = "#bacbca";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x + width * 0.18, y + height * 0.51);
+        ctx.lineTo(x - width * 0.25, y + height * 0.38);
+        ctx.stroke();
+        ctx.fillStyle = "#f2d66f";
+        ctx.beginPath();
+        ctx.arc(x + width * 0.3, y + height * 0.51, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawBridgeHole(obstacle) {
+        ctx.fillStyle = "#3989a0";
+        ctx.fillRect(obstacle.x, groundY - 11, obstacle.width, 18);
+        ctx.fillStyle = "#274c4b";
+        ctx.fillRect(obstacle.x, groundY - 11, obstacle.width, 3);
+        ctx.fillRect(obstacle.x, groundY - 2, obstacle.width, 3);
+        ctx.fillStyle = "#6bb6b6";
+        ctx.fillRect(obstacle.x + 5, groundY - 5, Math.max(0, obstacle.width - 10), 2);
+      }
+
+      function drawMegalodon(x = 555 + Math.sin(frame / 80) * 75, y = groundY + 8 + Math.sin(frame / 14) * 5) {
+        ctx.save();
+        ctx.fillStyle = "#405c68";
+        ctx.beginPath();
+        ctx.ellipse(x, y, 123, 34, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(x - 25, y - 20);
+        ctx.lineTo(x + 5, y - 77);
+        ctx.lineTo(x + 31, y - 18);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(x - 70, y + 13);
+        ctx.lineTo(x - 102, y + 39);
+        ctx.lineTo(x - 47, y + 28);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#e5efde";
+        ctx.beginPath();
+        ctx.ellipse(x - 101, y + 2, 20, 11, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#28383d";
+        ctx.beginPath();
+        ctx.arc(x - 105, y - 8, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#e5efde";
+        for (let i = 0; i < 5; i++) {
+          ctx.beginPath();
+          ctx.moveTo(x - 117 + i * 7, y + 1);
+          ctx.lineTo(x - 113 + i * 7, y + 10);
+          ctx.lineTo(x - 109 + i * 7, y + 1);
+          ctx.fill();
+        }
+        ctx.restore();
+        ctx.fillStyle = "#27444b";
+        ctx.font = "bold 13px Trebuchet MS, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("MEGALODON", x, Math.min(canvas.height - 5, y + 46));
+      }
+
+      function drawSharkWarning(obstacle) {
+        const x = obstacle.x;
+        const pulse = Math.sin(frame / 3) * 3;
+        ctx.strokeStyle = "#c5f0e3";
+        ctx.lineWidth = 3;
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.ellipse(x, groundY + 1, 24 + i * 13 + pulse, 4 + i * 2, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.fillStyle = "#285866";
+        ctx.font = "bold 12px Trebuchet MS, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("MEGALODON! LOMPAT 2X!", x, groundY - 26);
+      }
+
+      function drawJaguarBush(x, y, shaking, warning = false) {
+        const sway = shaking ? Math.sin(frame * 1.7) * 5 : Math.sin(frame / 11 + x) * 1.4;
+        ctx.save();
+        ctx.translate(x + sway, y);
+        ctx.fillStyle = "#41683e";
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 29, 14, 0, 0, Math.PI * 2);
+        ctx.ellipse(-18, 3, 16, 10, 0, 0, Math.PI * 2);
+        ctx.ellipse(19, 3, 17, 11, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#76a04e";
+        ctx.beginPath();
+        ctx.ellipse(-10, -4, 9, 5, -0.4, 0, Math.PI * 2);
+        ctx.ellipse(9, -5, 11, 5, 0.35, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+        if (warning) {
+          ctx.fillStyle = "#493d26";
+          ctx.font = "bold 11px Trebuchet MS, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("SEMAK BERGERAK!", x, y - 22);
+        }
+      }
+
+      function drawJaguar(obstacle) {
+        const { x, y, width, height } = obstacle;
+        ctx.save();
+        ctx.fillStyle = "#c58b3f";
+        ctx.beginPath();
+        ctx.ellipse(x + width * 0.48, y + height * 0.62, width * 0.37, height * 0.26, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.arc(x + width * 0.77, y + height * 0.35, height * 0.22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#85542f";
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          ctx.arc(x + 15 + i * 8, y + height * (i % 2 ? 0.59 : 0.68), 2.2, 0, Math.PI * 2);
+        }
+        ctx.fill();
+        ctx.fillStyle = "#e6c78c";
+        ctx.beginPath();
+        ctx.ellipse(x + width * 0.88, y + height * 0.43, width * 0.1, height * 0.08, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#2d342a";
+        ctx.beginPath();
+        ctx.arc(x + width * 0.81, y + height * 0.29, 2.4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawTitanoboa(obstacle) {
+        const { x, y, width, height } = obstacle;
+        const attacking = titanoboaAttackActive;
+        ctx.save();
+        ctx.strokeStyle = "#507044";
+        ctx.lineWidth = 24;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(x + width, groundY - 12);
+        ctx.bezierCurveTo(x + width * 0.8, y + height, x + width * 0.67, y + height * 0.15, x + width * 0.48, y + height * 0.63);
+        ctx.bezierCurveTo(x + width * 0.28, y + height * 1.13, x + width * 0.16, y + height * 0.13, x + width * 0.12, y + height * 0.51);
+        ctx.stroke();
+        ctx.lineCap = "butt";
+        const headY = attacking ? groundY - 64 : y + height * 0.33;
+        ctx.fillStyle = "#597c42";
+        ctx.beginPath();
+        ctx.ellipse(x + 24, headY, 31, 20, -0.18, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#edc35f";
+        ctx.beginPath();
+        ctx.arc(x + 10, headY - 7, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#231f20";
+        ctx.beginPath();
+        ctx.arc(x + 9, headY - 7, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#b19a5a";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x + 2, headY + 10);
+        ctx.lineTo(x - 19, headY + 16);
+        ctx.stroke();
+        ctx.restore();
+        ctx.fillStyle = "#3b4c2e";
+        ctx.font = "bold 12px Trebuchet MS, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(`TITANOBOA ${obstacle.hits}/3`, x + width * 0.55, y - 8);
+        if (titanoboaWarningTimer > 0) {
+          ctx.fillStyle = "#f1cc6a";
+          ctx.fillText("TITANOBOA MENYIAPKAN SERANGAN!", dino.x + 28, groundY - 78);
+        } else if (titanoboaAttackActive) {
+          ctx.fillStyle = "#f1cc6a";
+          ctx.fillText("TAHAN F + API!", dino.x + 28, groundY - 78);
+        }
+      }
+
+      function drawMummy(obstacle) {
+        const { x, y, width, height } = obstacle;
+        ctx.save();
+        ctx.fillStyle = "#cbbd93";
+        ctx.fillRect(x + width * 0.25, y + height * 0.34, width * 0.5, height * 0.6);
+        ctx.beginPath();
+        ctx.arc(x + width * 0.5, y + height * 0.23, width * 0.24, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#eee2bd";
+        for (let i = 0; i < 4; i++) {
+          ctx.fillRect(x + width * 0.18, y + height * (0.43 + i * 0.12), width * 0.64, 4);
+        }
+        ctx.fillStyle = "#392d31";
+        ctx.fillRect(x + width * 0.38, y + height * 0.2, 4, 3);
+        ctx.fillRect(x + width * 0.57, y + height * 0.2, 4, 3);
+        ctx.fillStyle = "#cbbd93";
+        ctx.fillRect(x + width * 0.31, y + height * 0.9, 7, height * 0.12);
+        ctx.fillRect(x + width * 0.61, y + height * 0.9, 7, height * 0.12);
+        ctx.restore();
+      }
+
+      function drawScorpionWarning(obstacle) {
+        const x = obstacle.x;
+        ctx.fillStyle = "#d5a462";
+        ctx.font = "bold 11px Trebuchet MS, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(obstacle.pattern === "high" ? "EKOR TINGGI · TUNDUK!" : "EKOR RENDAH · LOMPAT!", x, 72);
+      }
+
+      function drawScorpion(obstacle) {
+        const x = obstacle.x;
+        const y = groundY - 33;
+        const high = obstacle.pattern === "high";
+        const tailY = high ? groundY - 93 : groundY - 12;
+        ctx.save();
+        ctx.strokeStyle = "#8f6339";
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.moveTo(x + 20, y - 3);
+        ctx.quadraticCurveTo(x - 5, y - 67, x - 35, tailY);
+        ctx.stroke();
+        ctx.fillStyle = "#b77b3e";
+        ctx.beginPath();
+        ctx.arc(x + 15, y, 27, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(x - 25, y - 3, 16, 8, -0.3, 0, Math.PI * 2);
+        ctx.ellipse(x + 52, y - 3, 16, 8, 0.3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#382b28";
+        ctx.beginPath();
+        ctx.moveTo(x - 39, tailY + 7);
+        ctx.lineTo(x - 32, tailY - 12);
+        ctx.lineTo(x - 23, tailY + 5);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawBird(obstacle) {
+        const { x, y, width, height } = obstacle;
+        const garuda = obstacle.kind === "garuda";
+        const wing = Math.sin(frame / (garuda ? 3 : 2.5)) * height * 0.38;
+        const bodyColor = garuda ? "#a84d2d" : "#43505a";
+        const wingColor = garuda ? "#e5a83c" : "#64747b";
+        ctx.save();
+        ctx.fillStyle = bodyColor;
+        ctx.beginPath();
+        ctx.ellipse(x + width * 0.52, y + height * 0.56, width * 0.3, height * 0.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x + width * 0.79, y + height * 0.36, height * 0.16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = wingColor;
+        ctx.beginPath();
+        ctx.moveTo(x + width * 0.48, y + height * 0.5);
+        ctx.quadraticCurveTo(x + width * 0.38, y + height * 0.05 + wing, x + width * 0.07, y + height * 0.12 + wing);
+        ctx.quadraticCurveTo(x + width * 0.2, y + height * 0.52, x + width * 0.42, y + height * 0.67);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(x + width * 0.3, y + height * 0.55);
+        ctx.lineTo(x, y + height * 0.78);
+        ctx.lineTo(x + width * 0.4, y + height * 0.7);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = garuda ? "#e7bd4d" : "#c58d43";
+        ctx.beginPath();
+        ctx.moveTo(x + width * 0.9, y + height * 0.36);
+        ctx.lineTo(x + width, y + height * 0.42);
+        ctx.lineTo(x + width * 0.9, y + height * 0.47);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = "#fff5d5";
+        ctx.beginPath();
+        ctx.arc(x + width * 0.82, y + height * 0.31, garuda ? 3 : 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#26312e";
+        ctx.beginPath();
+        ctx.arc(x + width * 0.83, y + height * 0.31, 1.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        if (garuda) {
+          ctx.fillStyle = "#6c3926";
+          ctx.font = "bold 12px Trebuchet MS, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("GARUDA", x + width / 2, y - 7);
+        }
+      }
+
+      function drawCrocodileWarning(obstacle) {
+        const x = obstacle.x + obstacle.width / 2;
+        const ripple = Math.sin(frame / 4) * 2;
+        ctx.strokeStyle = "#8cc5a4";
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath();
+          ctx.ellipse(x, groundY - 3, 20 + i * 8 + ripple, 4 + i * 2, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.fillStyle = "#b7e0c4";
+        for (let i = 0; i < 3; i++) {
+          const bubbleY = groundY - 13 - ((frame / 2 + i * 9) % 20);
+          ctx.beginPath();
+          ctx.arc(x + (i - 1) * 10, bubbleY, 2.5 + i % 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = "#315b47";
+        ctx.font = "bold 11px Trebuchet MS, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("GELEMBUNG!", x, groundY - 34);
+      }
+
+      function drawSkillBall(ball) {
+        const colors = { shield: "#4c9d80", slow: "#5794c8", bonus: "#e4a83e", fire: "#ed7136" };
+        const symbols = { shield: "S", slow: "❄", bonus: "+", fire: "🔥" };
+        const bob = Math.sin(frame / 7 + ball.x) * 4;
+        ctx.save();
+        ctx.shadowColor = colors[ball.skill];
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = colors[ball.skill];
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y + bob, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 15px Trebuchet MS, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(symbols[ball.skill], ball.x, ball.y + bob + 1);
+        ctx.restore();
+      }
+
+      function draw() {
+        drawBackground();
+        obstacles.forEach(obstacle => {
+          if (obstacle.kind === "bear") drawBear(obstacle);
+          else if (obstacle.kind === "mummy") drawMummy(obstacle);
+          else if (obstacle.kind === "titanoboa") drawTitanoboa(obstacle);
+          else if (obstacle.kind === "scorpion-warning") drawScorpionWarning(obstacle);
+          else if (obstacle.kind === "scorpion-attack") drawScorpion(obstacle);
+          else if (obstacle.kind === "crocodile") drawCrocodile(obstacle);
+          else if (obstacle.kind === "crocodile-warning") drawCrocodileWarning(obstacle);
+          else if (obstacle.kind === "marlin") drawMarlin(obstacle);
+          else if (obstacle.kind === "bridge-hole") drawBridgeHole(obstacle);
+          else if (obstacle.kind === "shark-warning") drawSharkWarning(obstacle);
+          else if (obstacle.kind === "shark-attack") drawMegalodon(obstacle.x, obstacle.y);
+          else if (obstacle.kind === "jaguar-warning") drawJaguarBush(obstacle.x + obstacle.width / 2, groundY - 12, obstacle.warned, obstacle.warned);
+          else if (obstacle.kind === "jaguar") drawJaguar(obstacle);
+          else if (obstacle.kind === "bird" || obstacle.kind === "garuda") drawBird(obstacle);
+          else drawCactus(obstacle);
+        });
+        skillBalls.forEach(drawSkillBall);
+        if (gustavActive) {
+          const width = 150;
+          const height = 92;
+          const x = Math.max(-105, -105 + gustavProgress * 0.78);
+          drawCrocodile({ x, y: groundY - height, width, height });
+          ctx.fillStyle = "#263f34";
+          ctx.font = "bold 12px Trebuchet MS, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("GUSTAV", x + width / 2, groundY - height - 7);
+        }
+        drawDino();
+        particles.forEach(particle => {
+          ctx.globalAlpha = Math.max(0, particle.life / 24);
+          ctx.fillStyle = "#78936e";
+          ctx.fillRect(particle.x, particle.y, 3, 3);
+        });
+        ctx.globalAlpha = 1;
+      }
+
+      function jump() {
+        if (!running) return;
+        if (jumpsRemaining > 0) {
+          dino.velocityY = -14.5;
+          jumpsRemaining -= 1;
+          dino.ducking = false;
+          if (gustavActive) gustavProgress = Math.min(99, gustavProgress + 2);
+        }
+      }
+
+      function startGame() {
+        obstacles = [];
+        skillBalls = [];
+        particles = [];
+        score = 0;
+        speed = 6;
+        spawnTimer = 85;
+        skillSpawnTimer = 180 + Math.random() * 150;
+        slowTimer = 0;
+        bonusFlashTimer = 0;
+        shieldCharges = 0;
+        jumpsRemaining = 2;
+        bossActive = false;
+        bossSpawnIndex = 0;
+        bossSpawnTimer = 0;
+        bossPassedCount = 0;
+        bossCleared = false;
+        garudaSpawned = false;
+        garudaActive = false;
+        garudaCount = 0;
+        nextGarudaScore = 5300;
+        garudaSpawnTimer = 0;
+        bridgeHoleTimer = 0;
+        megalodonActive = false;
+        marlinSpawnTimer = 0;
+        megalodonAttackTimer = 0;
+        megalodonAttackCount = 0;
+        jaguarSpawnTimer = 0;
+        titanoboaActive = false;
+        titanoboaHits = 0;
+        titanoboaAttackTimer = 0;
+        titanoboaWarningTimer = 0;
+        titanoboaAttackActive = false;
+        fireCharges = 0;
+        fireKeyHeld = false;
+        fireGuarding = false;
+        titanoboaDefeated = false;
+        stage6StartScore = 0;
+        dungeonSpawnTimer = 0;
+        scorpionAttackTimer = 0;
+        scorpionWarningTimer = 0;
+        scorpionAttackActive = false;
+        stage = 1;
+        crocodileSpawnTimer = 0;
+        gustavStartTimer = 0;
+        gustavProgress = 0;
+        gustavActive = false;
+        stage2Cleared = false;
+        frame = 0;
+        dino.y = groundY - dino.height;
+        dino.velocityY = 0;
+        dino.ducking = false;
+        running = true;
+        stageStatus.textContent = "STAGE 1";
+        updateSkillStatus();
+        devModeToggle.checked = devMode;
+        document.querySelector("#dev-indicator").hidden = !devMode;
+        previousTime = 0;
+        scoreElement.textContent = formatScore(score);
+        message.classList.add("hidden");
+        cancelAnimationFrame(animationFrame);
+        animationFrame = requestAnimationFrame(gameLoop);
+      }
+
+      function endGame() {
+        running = false;
+        if (score > highScore) {
+          highScore = Math.floor(score);
+          try {
+            localStorage.setItem("dino-run-high-score", String(highScore));
+          } catch (error) {
+            // The game remains playable when browser storage is unavailable.
+          }
+        }
+        messageTitle.textContent = "Yah, tertabrak!";
+        messageText.textContent = `Skor kamu ${Math.floor(score)} · Rekor ${highScore}`;
+        playButton.textContent = "Main lagi";
+        message.classList.remove("hidden");
+      }
+
+      function finishGame() {
+        const stage6Score = Math.floor(score - stage6StartScore);
+        endGame();
+        messageTitle.textContent = "Stage 6 selesai!";
+        messageText.textContent = `Kamu meraih ${stage6Score} poin di dungeon · Total ${Math.floor(score)} · Rekor ${highScore}`;
+      }
+
+      function update(step) {
+        frame += step;
+        score += step * speed * 0.11;
+        speed = Math.min(12, 6 + score / 220);
+        scoreElement.textContent = formatScore(score);
+        if (stage === 6 && score - stage6StartScore >= 6000) {
+          stageStatus.textContent = "GAME SELESAI";
+          finishGame();
+          return;
+        }
+
+        dino.velocityY += 0.78 * step;
+        dino.y += dino.velocityY * step;
+        if (dino.y > groundY - dino.height) {
+          dino.y = groundY - dino.height;
+          dino.velocityY = 0;
+          jumpsRemaining = 2;
+        }
+
+        clouds.forEach(cloud => {
+          cloud.x -= speed * 0.18 * step;
+          if (cloud.x < -55) {
+            cloud.x = canvas.width + 35;
+            cloud.y = 45 + Math.random() * 80;
+          }
+        });
+
+        if (!bossActive && !bossCleared && score >= 200) {
+          bossActive = true;
+          bossSpawnIndex = 0;
+          bossPassedCount = 0;
+          bossSpawnTimer = 30;
+          stageStatus.textContent = "BOSS 0/4";
+        }
+
+        if (stage === 2 && score >= 5000) {
+          stage = 3;
+          stage2Cleared = true;
+          gustavActive = false;
+          obstacles = [];
+          crocodileSpawnTimer = 0;
+          spawnTimer = 65;
+          garudaSpawned = false;
+          garudaActive = false;
+          garudaCount = 0;
+          nextGarudaScore = 5300;
+          bossPassedCount = 0;
+          stageStatus.textContent = "STAGE 3 · GUNUNG";
+        }
+
+        if (stage === 3 && score >= 8000) {
+          stage = 4;
+          obstacles = [];
+          megalodonActive = true;
+          garudaActive = false;
+          megalodonAttackTimer = 1;
+          megalodonAttackCount = 0;
+          bridgeHoleTimer = 150;
+          marlinSpawnTimer = 105;
+          obstacles.push({
+            kind: "bridge-hole",
+            x: canvas.width + 220,
+            y: groundY - 11,
+            width: 48,
+            height: 18
+          });
+          stageStatus.textContent = "STAGE 4 · LAUT";
+        }
+
+        if (stage === 4 && score >= 11500) {
+          stage = 5;
+          obstacles = [];
+          megalodonActive = false;
+          jaguarSpawnTimer = 75;
+          stageStatus.textContent = "STAGE 5 · PULAU MISTERIUS";
+        }
+
+        if (bossActive) {
+          bossSpawnTimer -= step;
+          if (bossSpawnTimer <= 0 && bossSpawnIndex < bossNames.length) {
+            const name = bossNames[bossSpawnIndex];
+            const width = name === "Mother Bear" ? 67 : 58;
+            const height = name === "Grizzly Bear" ? 53 : 48;
+            obstacles.push({
+              kind: "bear",
+              name,
+              bossMember: true,
+              x: canvas.width + 10,
+              y: groundY - height,
+              width,
+              height
+            });
+            bossSpawnIndex += 1;
+            bossSpawnTimer = 165;
+          }
+        } else if (stage === 1) {
+          spawnTimer -= step;
+          if (spawnTimer <= 0) {
+            if (Math.random() < 0.23) {
+              const name = ["Polar Bear", "Black Bear", "Grizzly Bear"][Math.floor(Math.random() * 3)];
+              obstacles.push({ kind: "bear", name, x: canvas.width + 10, y: groundY - 48, width: 58, height: 48 });
+            } else {
+              const height = 31 + Math.random() * 20;
+              const width = 25 + Math.random() * 10;
+              obstacles.push({ kind: "cactus", x: canvas.width + 10, y: groundY - height, width, height, type: Math.random() > 0.65 ? 2 : 1 });
+            }
+            spawnTimer = 100 + Math.random() * 60 - Math.min(12, speed);
+          }
+        } else if (stage === 2) {
+          crocodileSpawnTimer -= step;
+          if (crocodileSpawnTimer <= 0) {
+            obstacles.push({
+              kind: "crocodile-warning",
+              x: canvas.width + 10,
+              y: groundY - 34,
+              width: 68,
+              height: 34,
+              warned: false,
+              warningTimer: 0
+            });
+            crocodileSpawnTimer = 185 + Math.random() * 100;
+          }
+        } else if (stage === 3) {
+          spawnTimer -= step;
+          if (spawnTimer <= 0) {
+            const baseY = groundY - 65;
+            obstacles.push({
+              kind: "bird",
+              x: canvas.width + 15,
+              y: baseY,
+              baseY,
+              width: 58,
+              height: 20,
+              phase: Math.random() * Math.PI * 2
+            });
+            spawnTimer = 85 + Math.random() * 65;
+          }
+          garudaSpawnTimer -= step;
+          if (garudaCount < 3 && score >= nextGarudaScore && garudaSpawnTimer <= 0) {
+            obstacles.push({
+              kind: "garuda",
+              x: canvas.width + 20,
+              y: groundY - 130,
+              baseY: groundY - 130,
+              width: 88,
+              height: 70,
+              phase: 0,
+              bossMember: true
+            });
+            garudaCount += 1;
+            nextGarudaScore += 850;
+            garudaSpawnTimer = 200;
+            garudaSpawned = true;
+            garudaActive = true;
+            stageStatus.textContent = `GARUDA ${garudaCount}/3`;
+          }
+        } else if (stage === 4) {
+          bridgeHoleTimer -= step;
+          if (bridgeHoleTimer <= 0) {
+            const width = 42 + Math.random() * 15;
+            obstacles.push({
+              kind: "bridge-hole",
+              x: canvas.width + 15,
+              y: groundY - 11,
+              width,
+              height: 18
+            });
+            bridgeHoleTimer = 95 + Math.random() * 65;
+          }
+          marlinSpawnTimer -= step;
+          if (marlinSpawnTimer <= 0) {
+            obstacles.push({
+              kind: "marlin",
+              x: canvas.width + 25,
+              y: groundY - 88,
+              width: 72,
+              height: 48
+            });
+            marlinSpawnTimer = 135 + Math.random() * 90;
+          }
+          if (score >= 10000 && score < 11000 && megalodonAttackCount < 4) {
+            megalodonAttackTimer -= step;
+            if (megalodonAttackTimer <= 0) {
+              obstacles.push({
+                kind: "shark-warning",
+                x: dino.x + dino.width / 2,
+                y: groundY,
+                width: 260,
+                height: 60,
+                warningTimer: 52
+              });
+              megalodonAttackCount += 1;
+              megalodonAttackTimer = 190;
+              stageStatus.textContent = `MEGALODON ${megalodonAttackCount}/4`;
+            }
+          } else if (score >= 11000) {
+            megalodonActive = false;
+          }
+        } else if (stage === 5 && !titanoboaActive) {
+          jaguarSpawnTimer -= step;
+          if (jaguarSpawnTimer <= 0) {
+            obstacles.push({
+              kind: "jaguar-warning",
+              x: canvas.width + 10,
+              y: groundY - 20,
+              width: 62,
+              height: 20,
+              warned: false,
+              warningTimer: 0
+            });
+            jaguarSpawnTimer = 110 + Math.random() * 65;
+          }
+          if (score >= 15000 && !titanoboaDefeated) {
+            titanoboaActive = true;
+            titanoboaHits = 0;
+            titanoboaAttackTimer = 210;
+            titanoboaWarningTimer = 0;
+            titanoboaAttackActive = false;
+            fireCharges = 0;
+            jaguarSpawnTimer = 99999;
+            obstacles = obstacles.filter(obstacle =>
+              obstacle.kind !== "jaguar-warning" && obstacle.kind !== "jaguar");
+            skillBalls = skillBalls.filter(ball => ball.skill !== "fire");
+            obstacles.push({
+              kind: "titanoboa",
+              x: 610,
+              y: groundY - 95,
+              width: 205,
+              height: 95,
+              hits: 0
+            });
+            stageStatus.textContent = "BOS TITANOBOA 0/3";
+          }
+        } else if (stage === 6) {
+          dungeonSpawnTimer -= step;
+          if (dungeonSpawnTimer <= 0) {
+            const height = 48 + Math.random() * 12;
+            obstacles.push({
+              kind: "mummy",
+              x: canvas.width + 10,
+              y: groundY - height,
+              width: 34,
+              height
+            });
+            dungeonSpawnTimer = 95 + Math.random() * 55;
+          }
+          scorpionAttackTimer -= step;
+          if (scorpionAttackTimer <= 0 && !scorpionAttackActive &&
+              !obstacles.some(obstacle => obstacle.kind === "scorpion-warning")) {
+            scorpionPattern = Math.random() < 0.5 ? "high" : "low";
+            obstacles.push({
+              kind: "scorpion-warning",
+              x: canvas.width + 20,
+              y: 0,
+              width: 64,
+              height: canvas.height,
+              pattern: scorpionPattern,
+              warningTimer: 0
+            });
+            scorpionAttackTimer = 210 + Math.random() * 110;
+          }
+        }
+
+        if (stage === 2 && !stage2Cleared) {
+          if (!gustavActive) {
+            gustavStartTimer -= step;
+            if (gustavStartTimer <= 0) {
+              gustavActive = true;
+              stageStatus.textContent = "GUSTAV 0%";
+            }
+          } else {
+            gustavProgress = Math.min(100, gustavProgress + step * 0.1);
+            stageStatus.textContent = `GUSTAV ${Math.floor(gustavProgress)}%`;
+            if (gustavProgress >= 100) {
+              gustavActive = false;
+              stage2Cleared = true;
+              stageStatus.textContent = "STAGE 2 CLEAR";
+            }
+          }
+        }
+
+        skillSpawnTimer -= step;
+        if (titanoboaActive && fireCharges < 3 &&
+            !skillBalls.some(ball => ball.skill === "fire")) {
+          skillBalls.push({ x: canvas.width + 10, y: groundY - 57, skill: "fire" });
+        } else if (skillSpawnTimer <= 0) {
+          const skillTypes = ["shield", "slow", "bonus"];
+          skillBalls.push({
+            x: canvas.width + 10,
+            y: groundY - 78 - Math.random() * 70,
+            skill: skillTypes[Math.floor(Math.random() * skillTypes.length)]
+          });
+          skillSpawnTimer = 260 + Math.random() * 220;
+        }
+
+        const crouching = dino.ducking && dino.y >= groundY - dino.height - 1;
+        const playerHeight = crouching ? 30 : 41;
+        const playerTop = crouching ? dino.y + 15 : dino.y + 5;
+        for (const obstacle of obstacles) {
+          const obstacleSpeed = speed * (slowTimer > 0 ? 0.55 : 1) * step;
+          if (obstacle.kind === "bird") {
+            obstacle.x -= obstacleSpeed;
+            obstacle.y = obstacle.baseY + Math.sin(frame / 7 + obstacle.phase) * 6;
+          } else if (obstacle.kind === "garuda") {
+            obstacle.x -= obstacleSpeed * 0.85;
+            obstacle.x += Math.sin(frame / 4 + obstacle.phase) * 3 * step;
+            obstacle.y = obstacle.baseY + Math.sin(frame / 5 + obstacle.phase) * 70;
+          } else if (obstacle.kind === "jaguar") {
+            obstacle.x -= obstacleSpeed * 1.15;
+            obstacle.age += step;
+            obstacle.y = groundY - obstacle.height - Math.sin(Math.min(1, obstacle.age / 28) * Math.PI) * 46;
+          }
+          if (obstacle.kind === "shark-warning") {
+            obstacle.warningTimer -= step;
+            if (obstacle.warningTimer <= 0) {
+              obstacle.kind = "shark-attack";
+              obstacle.y = groundY + 78;
+              obstacle.age = 0;
+            }
+            continue;
+          }
+          if (obstacle.kind === "shark-attack") {
+            obstacle.age += step;
+            if (obstacle.age <= 20) {
+              obstacle.y -= 8.6 * step;
+            } else if (obstacle.age <= 34) {
+              obstacle.y = groundY - 94;
+            } else {
+              obstacle.y += 10 * step;
+            }
+            if (obstacle.age >= 8 && obstacle.age <= 45) {
+              const hit = dino.x + 8 < obstacle.x + 112 &&
+                dino.x + dino.width - 5 > obstacle.x - 112 &&
+                playerTop + playerHeight > obstacle.y - 61 &&
+                playerTop < obstacle.y + 31;
+              if (hit) {
+                if (devMode) {
+                  obstacle.age = 46;
+                } else if (shieldCharges > 0) {
+                  shieldCharges -= 1;
+                  obstacle.age = 46;
+                  updateSkillStatus();
+                } else {
+                  endGame();
+                  return;
+                }
+              }
+            }
+            if (obstacle.age > 50) obstacle.x = -obstacle.width - 1;
+            continue;
+          }
+          if (obstacle.kind === "scorpion-warning") {
+            obstacle.x -= obstacleSpeed;
+            if (obstacle.x <= dino.x + 135) {
+              obstacle.kind = "scorpion-attack";
+              obstacle.x = dino.x + 20;
+              obstacle.pattern = scorpionPattern;
+              obstacle.attackTimer = 34;
+              scorpionAttackActive = true;
+              stageStatus.textContent = scorpionPattern === "high" ? "KALAJENGKING · TUNDUK!" : "KALAJENGKING · LOMPAT!";
+            }
+            continue;
+          }
+          if (obstacle.kind === "scorpion-attack") {
+            obstacle.attackTimer -= step;
+            const attackY = obstacle.pattern === "high" ? groundY - 56 : groundY - 18;
+            const attackHeight = obstacle.pattern === "high" ? 23 : 20;
+            const hit = dino.x + dino.width - 5 > obstacle.x - 16 &&
+              dino.x + 8 < obstacle.x + 35 &&
+              playerTop + playerHeight > attackY &&
+              playerTop < attackY + attackHeight;
+            if (hit) {
+              if (devMode) {
+                obstacle.attackTimer = 0;
+              } else {
+                endGame();
+                return;
+              }
+            }
+            if (obstacle.attackTimer <= 0) {
+              scorpionAttackActive = false;
+              obstacle.x = -obstacle.width - 1;
+              stageStatus.textContent = "STAGE 6 · DUNGEON";
+            }
+            continue;
+          }
+          if (obstacle.kind === "titanoboa") {
+            obstacle.x = 610;
+            obstacle.hits = titanoboaHits;
+            if (titanoboaWarningTimer > 0) {
+              titanoboaWarningTimer -= step;
+              if (titanoboaWarningTimer <= 0) {
+                titanoboaAttackActive = true;
+                obstacle.attackTimer = 42;
+              }
+            } else if (titanoboaAttackActive) {
+              obstacle.attackTimer -= step;
+              const strikeX = obstacle.x - 495;
+              const strikeY = groundY - 55;
+              const hit = dino.x + dino.width - 5 > strikeX - 28 &&
+                dino.x + 8 < strikeX + 38 &&
+                playerTop + playerHeight > strikeY - 18 &&
+                playerTop < strikeY + 22;
+              if (hit) {
+                if (fireGuarding && fireCharges > 0) {
+                  fireCharges -= 1;
+                  titanoboaHits += 1;
+                  obstacle.hits = titanoboaHits;
+                  fireGuarding = fireKeyHeld && fireCharges > 0;
+                  titanoboaAttackActive = false;
+                  titanoboaWarningTimer = 0;
+                  titanoboaAttackTimer = 175;
+                  updateSkillStatus();
+                  if (titanoboaHits >= 3) {
+                    titanoboaActive = false;
+                    titanoboaDefeated = true;
+                    fireCharges = 0;
+                    fireGuarding = false;
+                    stage = 6;
+                    stage6StartScore = score;
+                    obstacles = [];
+                    dungeonSpawnTimer = 70;
+                    scorpionAttackTimer = 150;
+                    scorpionAttackActive = false;
+                    stageStatus.textContent = "STAGE 6 · DUNGEON";
+                    updateSkillStatus();
+                    break;
+                  }
+                  stageStatus.textContent = `TITANOBOA ${titanoboaHits}/3`;
+                } else if (devMode) {
+                  titanoboaAttackActive = false;
+                  titanoboaWarningTimer = 0;
+                  titanoboaAttackTimer = 150;
+                } else {
+                  endGame();
+                  return;
+                }
+              } else if (obstacle.attackTimer <= 0) {
+                titanoboaAttackActive = false;
+                titanoboaWarningTimer = 0;
+                titanoboaAttackTimer = 160;
+              }
+            } else {
+              titanoboaAttackTimer -= step;
+              if (titanoboaAttackTimer <= 0) {
+                titanoboaWarningTimer = 58;
+                stageStatus.textContent = "TITANOBOA MENYERANG!";
+              }
+            }
+            continue;
+          }
+          if (obstacle.kind === "jaguar-warning") {
+            if (!obstacle.warned) {
+              obstacle.x -= obstacleSpeed;
+              if (obstacle.x <= dino.x + 170) {
+                obstacle.warned = true;
+                  obstacle.warningTimer = 27;
+                stageStatus.textContent = "AWAS JAGUAR!";
+              }
+            } else {
+              obstacle.warningTimer -= step;
+              if (obstacle.warningTimer <= 0) {
+                obstacle.kind = "jaguar";
+                obstacle.age = 0;
+                obstacle.y = groundY - obstacle.height;
+                stageStatus.textContent = "STAGE 5 · PULAU MISTERIUS";
+              }
+            }
+            continue;
+          }
+          if (obstacle.kind === "crocodile-warning") {
+            if (!obstacle.warned) {
+              obstacle.x -= obstacleSpeed;
+              if (obstacle.x <= dino.x + 220) {
+                obstacle.warned = true;
+                obstacle.warningTimer = 42;
+                if (!gustavActive) stageStatus.textContent = "AWAS BUAYA!";
+              }
+            } else {
+              obstacle.warningTimer -= step;
+              if (obstacle.warningTimer <= 0) {
+                obstacle.kind = "crocodile";
+                obstacle.y = groundY - obstacle.height;
+                if (!gustavActive) stageStatus.textContent = stage2Cleared ? "STAGE 2 CLEAR" : "STAGE 2 · RAWA";
+              }
+            }
+            continue;
+          }
+          if (obstacle.kind === "bridge-hole") {
+            obstacle.x -= obstacleSpeed;
+            const overlapsHole = dino.x + dino.width - 5 > obstacle.x + 3 &&
+              dino.x + 8 < obstacle.x + obstacle.width - 3;
+            const hasLanded = dino.y >= groundY - dino.height - 1;
+            if (overlapsHole && hasLanded && !devMode) {
+              endGame();
+              return;
+            }
+            continue;
+          }
+          obstacle.x -= obstacleSpeed * (obstacle.kind === "marlin" ? 2.8 : 1);
+          const hit = dino.x + 8 < obstacle.x + obstacle.width - 4 &&
+            dino.x + dino.width - 5 > obstacle.x + 4 &&
+            playerTop + playerHeight > obstacle.y + 5 &&
+            playerTop < obstacle.y + obstacle.height;
+          if (hit) {
+            if (devMode) {
+              obstacle.x = -obstacle.width - 1;
+            } else if (shieldCharges > 0) {
+              shieldCharges -= 1;
+              obstacle.x = -obstacle.width - 1;
+              updateSkillStatus();
+            } else {
+              endGame();
+              return;
+            }
+          }
+          if (!obstacle.passed && obstacle.x + obstacle.width < dino.x) {
+            obstacle.passed = true;
+            if (obstacle.bossMember) {
+              if (obstacle.kind === "garuda") {
+                bossPassedCount += 1;
+                garudaActive = false;
+                stageStatus.textContent = garudaCount < 3 ? `GARUDA ${bossPassedCount}/3 · BERSIAP` : "GUNUNG · GARUDA LEWAT";
+              } else {
+                bossPassedCount += 1;
+                if (bossPassedCount >= bossNames.length && bossSpawnIndex === bossNames.length) {
+                  bossActive = false;
+                  bossCleared = true;
+                  stage = 2;
+                  crocodileSpawnTimer = 70;
+                  gustavStartTimer = 150;
+                  gustavProgress = 0;
+                  stageStatus.textContent = "STAGE 2 · RAWA";
+                } else {
+                  stageStatus.textContent = `BOSS ${bossPassedCount}/4`;
+                }
+              }
+            }
+            for (let i = 0; i < 4; i++) {
+              particles.push({ x: dino.x + Math.random() * 25, y: groundY + Math.random() * 8, life: 24 });
+            }
+          }
+        }
+        obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > -5);
+        skillBalls.forEach(ball => {
+          ball.x -= speed * (slowTimer > 0 ? 0.55 : 1) * step;
+          const ballY = ball.y + Math.sin(frame / 7 + ball.x) * 4;
+          if (dino.x + dino.width > ball.x - 14 && dino.x < ball.x + 14 &&
+              dino.y + dino.height > ballY - 14 && dino.y < ballY + 14) {
+            if (ball.skill === "shield") {
+              shieldCharges = Math.min(2, shieldCharges + 1);
+              updateSkillStatus();
+            } else if (ball.skill === "slow") {
+              slowTimer = 360;
+              updateSkillStatus();
+            } else {
+              if (ball.skill === "fire") {
+                fireCharges = Math.min(3, fireCharges + 1);
+                fireGuarding = fireKeyHeld;
+                updateSkillStatus();
+              } else {
+                score += 75;
+                bonusFlashTimer = 90;
+                updateSkillStatus();
+              }
+            }
+            ball.collected = true;
+          }
+        });
+        skillBalls = skillBalls.filter(ball => !ball.collected && ball.x > -20);
+        let skillExpired = false;
+        if (slowTimer > 0) {
+          slowTimer = Math.max(0, slowTimer - step);
+          skillExpired = slowTimer === 0;
+        }
+        if (bonusFlashTimer > 0) {
+          bonusFlashTimer = Math.max(0, bonusFlashTimer - step);
+          skillExpired = skillExpired || bonusFlashTimer === 0;
+        }
+        if (skillExpired) updateSkillStatus();
+        particles.forEach(particle => {
+          particle.x -= speed * 0.35 * step;
+          particle.life -= step;
+        });
+        particles = particles.filter(particle => particle.life > 0);
+      }
+
+      function gameLoop(timestamp) {
+        if (!running) return;
+        const step = previousTime ? Math.min((timestamp - previousTime) / 16.67, 2) : 1;
+        previousTime = timestamp;
+        update(step);
+        draw();
+        if (running) animationFrame = requestAnimationFrame(gameLoop);
+      }
+
+      function setDuck(value) {
+        dino.ducking = value;
+      }
+
+      document.addEventListener("keydown", event => {
+        if (!devCodePanel.hidden) return;
+        if (["Space", "ArrowUp", "ArrowDown"].includes(event.code)) event.preventDefault();
+        if (event.repeat && event.code !== "KeyF") return;
+        if (event.code === "Space" || event.code === "ArrowUp" || event.code === "KeyW") jump();
+        if (event.code === "ArrowDown" || event.code === "KeyS") setDuck(true);
+        if (event.code === "KeyF") {
+          fireKeyHeld = true;
+          fireGuarding = fireCharges > 0;
+          updateSkillStatus();
+        }
+        if (!running && (event.code === "Enter" || event.code === "Space")) startGame();
+      });
+      document.addEventListener("keyup", event => {
+        if (event.code === "ArrowDown" || event.code === "KeyS") setDuck(false);
+        if (event.code === "KeyF") {
+          fireKeyHeld = false;
+          fireGuarding = false;
+          updateSkillStatus();
+        }
+      });
+      arena.addEventListener("pointerdown", event => {
+        if (event.target.closest("#dev-code-panel")) return;
+        if (event.target === playButton) return;
+        if (running) jump();
+      });
+      playButton.addEventListener("click", startGame);
+      devModeToggle.addEventListener("change", () => {
+        if (devModeToggle.checked) {
+          devCodeInput.value = "";
+          devCodeError.textContent = "";
+          devCodePanel.hidden = false;
+          devCodeInput.focus();
+        } else {
+          devMode = false;
+          devCodePanel.hidden = true;
+        }
+        document.querySelector("#dev-indicator").hidden = !devMode;
+      });
+      devCodeForm.addEventListener("submit", event => {
+        event.preventDefault();
+        if (devCodeInput.value !== "admin777") {
+          devCodeError.textContent = "Kode salah. Coba lagi.";
+          devCodeInput.select();
+          return;
+        }
+        devMode = true;
+        devCodePanel.hidden = true;
+        document.querySelector("#dev-indicator").hidden = false;
+      });
+      devCodeCancel.addEventListener("click", () => {
+        devCodePanel.hidden = true;
+        devModeToggle.checked = false;
+        devMode = false;
+        document.querySelector("#dev-indicator").hidden = true;
+      });
+      window.addEventListener("blur", () => {
+        setDuck(false);
+        fireKeyHeld = false;
+        fireGuarding = false;
+        updateSkillStatus();
+      });
+
+      draw();
+    })();
+  </script>
+</body>
+</html>
